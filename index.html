@@ -5,6 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>القرآن الكريم — المصحف الشريف وخطة الختمة</title>
   <meta name="description" content="تطبيق القرآن الكريم الشامل: تلاوة الآيات بصوت الشيخ المختار عند النقر عليها، فهرس السور والبحث، ومخطط الختمة اليومي والتنبيهات.">
+  <meta name="theme-color" content="#065f46">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="القرآن الكريم">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/svg+xml" href="/icon.svg">
+  <link rel="manifest" href="/manifest.json">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Amiri+Quran&family=Amiri:ital,wght@0,400;0,700;1,400&family=Cairo:wght@300;400;500;600;700;800&family=Scheherazade+New:wght@400;600;700&display=swap" rel="stylesheet">
@@ -82,6 +90,11 @@
 
       <!-- Actions -->
       <div class="flex items-center gap-2">
+        <button id="pwa-install-btn" onclick="triggerPWAInstall()" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 rounded-xl transition-all shadow-xs cursor-pointer border border-emerald-500/40" title="تثبيت التطبيق على هاتفك">
+          <span>📲</span>
+          <span class="hidden sm:inline">تثبيت التطبيق</span>
+        </button>
+
         <button onclick="toggleDarkMode()" class="w-9 h-9 rounded-xl flex items-center justify-center text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-800 transition-colors" title="تبديل الوضع الليلي">
           <span id="theme-icon">🌙</span>
         </button>
@@ -829,6 +842,68 @@
     if (localStorage.getItem('quran_dark') === 'true') {
       document.documentElement.classList.add('dark');
       document.getElementById('theme-icon').innerText = '☀️';
+    }
+  </script>
+  <!-- iOS Safari PWA Install Modal -->
+  <div id="ios-pwa-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+    <div class="w-full max-w-sm bg-white dark:bg-[#181f25] border border-stone-200 dark:border-stone-800 rounded-3xl p-6 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between pb-3 border-b border-stone-100 dark:border-stone-800">
+        <h3 class="font-bold text-base text-stone-900 dark:text-stone-100">
+          تثبيت التطبيق على الآيفون (iOS)
+        </h3>
+        <button onclick="document.getElementById('ios-pwa-modal').classList.add('hidden')" class="text-stone-400 hover:text-stone-600 text-lg">
+          ✕
+        </button>
+      </div>
+
+      <div class="space-y-3 text-xs sm:text-sm text-stone-600 dark:text-stone-300 leading-relaxed">
+        <p>1. اضغط على زر <strong>المشاركة (Share ⎋)</strong> في أسفل متصفح Safari.</p>
+        <p>2. مرر للأسفل واختر <strong>إضافة إلى الصفحة الرئيسية (Add to Home Screen ⊞)</strong>.</p>
+        <p>3. اضغط <strong>إضافة (Add)</strong> وسيصبح تطبيق القرآن متاحاً على شاشة هاتفك كتطبيق أصلي!</p>
+      </div>
+
+      <button onclick="document.getElementById('ios-pwa-modal').classList.add('hidden')" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold">
+        فهمت، حسناً
+      </button>
+    </div>
+  </div>
+
+  <script>
+    // Register Service Worker
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch(err => {
+          console.warn('SW registration skipped:', err);
+        });
+      });
+    }
+
+    // PWA Install Prompt handling
+    let deferredPWAEvent = null;
+    const isIOSDevice = /iphone|ipad|ipod/.test(navigator.userAgent.toLowerCase());
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator.standalone === true);
+
+    if (isStandalone) {
+      const btn = document.getElementById('pwa-install-btn');
+      if (btn) btn.style.display = 'none';
+    }
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPWAEvent = e;
+    });
+
+    function triggerPWAInstall() {
+      if (deferredPWAEvent) {
+        deferredPWAEvent.prompt();
+        deferredPWAEvent.userChoice.then(() => {
+          deferredPWAEvent = null;
+        });
+      } else if (isIOSDevice) {
+        document.getElementById('ios-pwa-modal').classList.remove('hidden');
+      } else {
+        alert("لتثبيت التطبيق على هاتفك:\n- أندرويد (Chrome): اضغط على خيارات المتصفح (⋮) ثم 'تثبيت التطبيق' أو 'إضافة إلى الشاشة الرئيسية'.\n- آيفون (Safari): اضغط زر المشاركة ثم 'إضافة إلى الصفحة الرئيسية'.");
+      }
     }
   </script>
 </body>
